@@ -89,13 +89,13 @@ sess = sv.prepare_or_wait_for_session(config=tf.ConfigProto(
     gpu_options=tf.GPUOptions(allow_growth=True)))
 
 # 预训练，直接训练不易收敛
-if not FLAGS.resume:
-    pretrain = np.load(FLAGS.pretrain)
-    sess.graph._unsafe_unfinalize()
-    tf.logging.info('Loading Pretrained Embeddings.... from %s' % FLAGS.pretrain)
-    sess.run([
-        model.user_memory.embeddings.assign(pretrain['user'] * 0.5),
-        model.item_memory.embeddings.assign(pretrain['item'] * 0.5)])
+# if not FLAGS.resume:
+#     pretrain = np.load(FLAGS.pretrain)
+#     sess.graph._unsafe_unfinalize()
+#     tf.logging.info('Loading Pretrained Embeddings.... from %s' % FLAGS.pretrain)
+#     sess.run([
+#         model.user_memory.embeddings.assign(pretrain['user'] * 0.5),
+#         model.item_memory.embeddings.assign(pretrain['item'] * 0.5)])
 
 # Train Loop
 for i in range(FLAGS.iters):
@@ -160,11 +160,11 @@ tf.logging.info(s)
 # 用with语句定义的会话，在最后不需要再关闭了
 with open("{}/final_results".format(config.logdir), 'w') as fout:
     header = ','.join([str(k) for k in EVAL_AT])
-fout.write("{},{}\n".format('metric', header))
-ndcg = ','.join([str(x) for x in ndcgs])
-hr = ','.join([str(x) for x in hrs])
-fout.write("ndcg,{}\n".format(ndcg))
-fout.write("hr,{}".format(hr))
+    fout.write("{},{}\n".format('metric', header))
+    ndcg = ','.join([str(x) for x in ndcgs])
+    hr = ','.join([str(x) for x in hrs])
+    fout.write("ndcg,{}\n".format(ndcg))
+    fout.write("hr,{}".format(hr))
 
 tf.logging.info("Saving model...")
 # Save before exiting
