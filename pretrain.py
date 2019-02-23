@@ -54,6 +54,7 @@ sess = sv.prepare_or_wait_for_session(
 for i in range(FLAGS.iters):
     if sv.should_stop():
         break
+    #
     progress = tqdm(enumerate(dataset.get_data(FLAGS.batch_size, False, FLAGS.neg)),
                     dynamic_ncols=True, total=(dataset.train_size * FLAGS.neg) // FLAGS.batch_size)
     loss = []

@@ -25,6 +25,7 @@ parser.add_argument('-b', '--batch_size', help='Batch Size', type=int, default=1
 parser.add_argument('-e', '--embedding', help='Embedding Size', type=int, default=50)
 parser.add_argument('--dataset', help='path to file', type=str, required=True)
 parser.add_argument('--hops', help='Number of hops/layers', type=int, default=2)
+# 负样本计数
 parser.add_argument('-n', '--neg', help='Negative Samples Count', type=int, default=4)
 parser.add_argument('--l2', help='l2 Regularization', type=float, default=0.1)
 parser.add_argument('-l', '--logdir', help='Set custom name for logdirectory',
@@ -101,7 +102,7 @@ if not FLAGS.resume:
 for i in range(FLAGS.iters):
     if sv.should_stop():
         break
-
+    # 对应参数含义def get_data(self, batch_size, neighborhood, neg_count):
     # tqdm是一个强大的终端进度条工具
     progress = tqdm(enumerate(dataset.get_data(FLAGS.batch_size, True, FLAGS.neg)),
                     dynamic_ncols=True, total=(dataset.train_size * FLAGS.neg) // FLAGS.batch_size)
