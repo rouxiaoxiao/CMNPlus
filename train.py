@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser(parents=[get_optimizer_argparse()],
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-g', '--gpu', help='set gpu device number 0-3', type=str, required=True)
 # 迭代次数，默认迭代30次,为了快改为3进行测试
-parser.add_argument('--iters', help='Max iters', type=int, default=1)
+parser.add_argument('--iters', help='Max iters', type=int, default=3)
 parser.add_argument('-b', '--batch_size', help='Batch Size', type=int, default=128)
 parser.add_argument('-e', '--embedding', help='Embedding Size', type=int, default=50)
 parser.add_argument('--dataset', help='path to file', type=str, required=True)
@@ -88,14 +88,14 @@ sv = tf.train.Supervisor(logdir=config.logdir, save_model_secs=60 * 10,
 sess = sv.prepare_or_wait_for_session(config=tf.ConfigProto(
     gpu_options=tf.GPUOptions(allow_growth=True)))
 
-# 预训练，直接训练不易收敛
-# if not FLAGS.resume:
-#     pretrain = np.load(FLAGS.pretrain)
-#     sess.graph._unsafe_unfinalize()
-#     tf.logging.info('Loading Pretrained Embeddings.... from %s' % FLAGS.pretrain)
-#     sess.run([
-#         model.user_memory.embeddings.assign(pretrain['user'] * 0.5),
-#         model.item_memory.embeddings.assign(pretrain['item'] * 0.5)])
+# 预训练，直接训练不易收敛（不进行预训练 效果极其差）
+if not FLAGS.resume:
+    pretrain = np.load(FLAGS.pretrain)
+    sess.graph._unsafe_unfinalize()
+    tf.logging.info('Loading Pretrained Embeddings.... from %s' % FLAGS.pretrain)
+    sess.run([
+        model.user_memory.embeddings.assign(pretrain['user'] * 0.5),
+        model.item_memory.embeddings.assign(pretrain['item'] * 0.5)])
 
 # Train Loop
 for i in range(FLAGS.iters):
@@ -121,6 +121,7 @@ for i in range(FLAGS.iters):
             model.input_neighborhood_lengths_negative: neg_neighborhood_length
         }
         batch_loss, _ = sess.run([model.loss, model.train], feed)
+
         loss.append(batch_loss)
         progress.set_description(u"[{}] Loss: {:,.4f} » » » » ".format(i, batch_loss))
 
@@ -130,6 +131,7 @@ for i in range(FLAGS.iters):
     evaluate_model(sess, dataset.test_data, dataset.item_users_list, model.input_users, model.input_items,
                    model.input_neighborhoods, model.input_neighborhood_lengths,
                    model.dropout, model.score, config.max_neighbors)
+writer = tf.summary.FileWriter("D://TensorBoard//test", sess.graph)
 
 EVAL_AT = range(1, 11)
 hrs, ndcgs = [], []

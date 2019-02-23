@@ -3,7 +3,6 @@ from collections import defaultdict
 
 
 class Dataset(object):
-
     def __init__(self, filename):
         self._data = np.load(filename)
         self.train_data = self._data['train_data']
@@ -12,17 +11,22 @@ class Dataset(object):
         self._n_users, self._n_items = self.train_data.max(axis=0) + 1
 
         # Neighborhoods
+        # defaultdict()在dict()的基础上添加了一个missing(key)的方法，不会出现keyerror的情况
         self.user_items = defaultdict(set)
         self.item_users = defaultdict(set)
         self.item_users_list = defaultdict(list)
+        # 构建user对应的item，和item对应的user字典
         for u, i in self.train_data:
             self.user_items[u].add(i)
             self.item_users[i].add(u)
             # Get a list version so we do not need to perform type casting
+            # 获取列表版本，以便我们不需要执行类型转换
             self.item_users_list[i].append(u)
 
+        # 对同一item感兴趣的最大user量
         self._max_user_neighbors = max([len(x) for x in self.item_users.values()])
 
+    # 训练集中的数据量
     @property
     def train_size(self):
         """
@@ -31,20 +35,25 @@ class Dataset(object):
         """
         return len(self.train_data)
 
+    # user用户数
     @property
     def user_count(self):
         return self._n_users
 
+    # item物品数
     @property
     def item_count(self):
         return self._n_items
 
+    # 随机取物品数，统一绘制项目
     def _sample_item(self):
         """
         Draw an item uniformly
         """
         return np.random.randint(0, self.item_count)
 
+
+    # 统一采样否定项目
     def _sample_negative_item(self, user_id):
         """
         Uniformly sample a negative item
@@ -65,7 +74,7 @@ class Dataset(object):
 
     def _generate_data(self, neg_count):
         idx = 0
-        self._examples = np.zeros((self.train_size*neg_count, 3),
+        self._examples = np.zeros((self.train_size * neg_count, 3),
                                   dtype=np.uint32)
         self._examples[:, :] = 0
         for user_idx, item_idx in self.train_data:
@@ -82,7 +91,7 @@ class Dataset(object):
         neg_neighbor = np.zeros((batch_size, self._max_user_neighbors), dtype=np.int32)
         neg_length = np.zeros(batch_size, dtype=np.int32)
 
-        # Shuffle index
+        # Shuffle index 随机指数
         np.random.shuffle(self._train_index)
 
         idx = 0
@@ -94,8 +103,11 @@ class Dataset(object):
 
                 # Get neighborhood information
                 if neighborhood:
+                    # print("neighborhood" + str(neighborhood))
                     if len(self.item_users[item_idx]) > 0:
                         pos_length[idx] = len(self.item_users[item_idx])
+                        # print("self.item_users[item_idx]:" + str(pos_length[idx]))
+                        # print("self.item_users_list[item_idx]:" + str(len(self.item_users_list[item_idx])))
                         pos_neighbor[idx, :pos_length[idx]] = self.item_users_list[item_idx]
                     else:
                         # Length defaults to 1
